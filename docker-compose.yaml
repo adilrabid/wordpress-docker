@@ -1,0 +1,51 @@
+version: "3.0"
+services:
+  # Database service
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: wordpress
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    networks:
+      - wpsite
+
+  phpmyadmin:
+    depends_on:
+      - db
+    image: phpmyadmin:latest
+    ports:
+      - "8080:80" #8000 from local computer to 80 inside container.
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      PMA_HOST: db
+    restart: always
+    networks:
+      - wpsite
+
+  # Wordpress service (main application)
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    ports:
+      - "8000:80" #8000 from local computer to 80 inside container.
+    volumes:
+      - './plugins:/var/www/html/wp-content/plugins'
+      - './:/var/www/html'
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: password
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DEBUG: 1
+    restart: always
+    networks:
+      - wpsite
+
+networks:
+  wpsite:
+volumes:
+  db_data:
